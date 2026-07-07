@@ -52,5 +52,16 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unreachable = true
 
+[tool.coverage.run]
+source = ["hadid"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
