@@ -7,11 +7,9 @@ The activity log is archived as a single prompt-history conversation.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from typing import Any, Iterator
 
-from . import load_json_from_path
+from . import load_json_from_path, source_id_for
 
 
 def parse_export(path: str) -> Iterator[dict[str, Any]]:
@@ -50,13 +48,20 @@ def parse_data(data: Any) -> Iterator[dict[str, Any]]:
             )
     messages.sort(key=lambda m: m.pop("_sort"))
 
-    digest = hashlib.sha256(
-        json.dumps(data, sort_keys=True).encode("utf-8")
-    ).hexdigest()[:16]
+    title = "Gemini prompt history"
+    created_at = messages[0]["created_at"] if messages else None
+    source_id, generated = source_id_for(
+        "gemini",
+        None,
+        title=title,
+        created_at=created_at,
+        messages=messages,
+    )
     yield {
         "source": "gemini",
-        "source_id": "takeout-" + digest,
-        "title": "Gemini prompt history",
-        "created_at": messages[0]["created_at"] if messages else None,
+        "source_id": source_id,
+        "title": title,
+        "created_at": created_at,
         "messages": messages,
+        "_source_id_generated": generated,
     }

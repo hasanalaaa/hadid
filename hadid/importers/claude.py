@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
-from . import load_json_from_path
+from . import load_json_from_path, source_id_for
 
 
 def _message_text(m: dict[str, Any]) -> str:
@@ -40,10 +40,20 @@ def parse_data(data: Any) -> Iterator[dict[str, Any]]:
             messages.append(
                 {"role": role, "content": text, "created_at": m.get("created_at")}
             )
+        title = conv.get("name") or "Untitled"
+        created_at = conv.get("created_at")
+        source_id, generated = source_id_for(
+            "claude",
+            conv.get("uuid"),
+            title=title,
+            created_at=created_at,
+            messages=messages,
+        )
         yield {
             "source": "claude",
-            "source_id": str(conv.get("uuid") or ""),
-            "title": conv.get("name") or "Untitled",
-            "created_at": conv.get("created_at"),
+            "source_id": source_id,
+            "title": title,
+            "created_at": created_at,
             "messages": messages,
+            "_source_id_generated": generated,
         }

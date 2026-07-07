@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
-from . import load_json_from_path, unix_to_iso
+from . import first_original_id, load_json_from_path, source_id_for, unix_to_iso
 
 
 def parse_export(path: str) -> Iterator[dict[str, Any]]:
@@ -41,10 +41,20 @@ def parse_data(data: Any) -> Iterator[dict[str, Any]]:
                 }
             )
         messages.sort(key=lambda m: m.pop("_sort"))
+        title = conv.get("title") or "Untitled"
+        created_at = unix_to_iso(conv.get("create_time"))
+        source_id, generated = source_id_for(
+            "chatgpt",
+            first_original_id(conv.get("id"), conv.get("conversation_id")),
+            title=title,
+            created_at=created_at,
+            messages=messages,
+        )
         yield {
             "source": "chatgpt",
-            "source_id": str(conv.get("id") or conv.get("conversation_id") or ""),
-            "title": conv.get("title") or "Untitled",
-            "created_at": unix_to_iso(conv.get("create_time")),
+            "source_id": source_id,
+            "title": title,
+            "created_at": created_at,
             "messages": messages,
+            "_source_id_generated": generated,
         }

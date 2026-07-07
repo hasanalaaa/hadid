@@ -35,6 +35,14 @@ def cmd_import(args: argparse.Namespace) -> None:
     added = updated = skipped = messages = 0
     with Archive(args.db) as archive:
         for conv in IMPORTERS[platform](data):
+            if conv.get("_source_id_generated"):
+                print(
+                    "Warning: "
+                    f"{conv['source']} conversation {conv['title']!r} has no "
+                    "original id; generated deterministic source_id "
+                    f"{conv['source_id']}.",
+                    file=sys.stderr,
+                )
             result = archive.add_conversation(conv)
             if result is None:
                 skipped += 1

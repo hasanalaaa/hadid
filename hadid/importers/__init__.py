@@ -22,6 +22,7 @@ import json
 import logging
 import zipfile
 from datetime import datetime, timezone
+from hashlib import sha256
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,52 @@ def load_json_from_path(path: str) -> Any:
         )
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+
+def first_original_id(*values: Any) -> Any | None:
+    """Return the first non-empty platform-provided id value."""
+    for value in values:
+        if value is not None and str(value).strip():
+            return value
+    return None
+
+
+def source_id_for(
+    source: str,
+    original_id: Any | None,
+    *,
+    title: str | None,
+    created_at: str | None,
+    messages: list[dict[str, Any]],
+) -> tuple[str, bool]:
+    """Return a stable source id and whether it had to be generated.
+
+    Platform ids are preserved exactly. When an export omits the original
+    conversation id, build a deterministic id from fields that should stay
+    stable across incremental re-imports.
+    """
+    if original_id is not None and str(original_id).strip():
+        return str(original_id), False
+
+    first_message: dict[str, Any] = {}
+    for message in messages:
+        if str(message.get("content") or "").strip():
+            first_message = {
+                "role": message.get("role"),
+                "content": message.get("content"),
+                "created_at": message.get("created_at"),
+            }
+            break
+
+    identity = {
+        "source": source,
+        "title": title or "Untitled",
+        "created_at": created_at,
+        "first_message": first_message,
+    }
+    raw = json.dumps(identity, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    digest = sha256(raw.encode("utf-8")).hexdigest()
+    return f"generated-{source}-{digest}", True
 
 
 def detect_platform(data: Any) -> str:
