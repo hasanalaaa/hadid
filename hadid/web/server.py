@@ -179,7 +179,7 @@ class _Handler(BaseHTTPRequestHandler):
 
 def serve(
     db_path: str = DEFAULT_DB_PATH, host: str = "127.0.0.1", port: int = 8642
-) -> None:
+) -> None:  # pragma: no cover
     """Start the local web app (loopback use only)."""
     if host not in _ALLOWED_HOSTS:
         logger.warning(

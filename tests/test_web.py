@@ -114,3 +114,52 @@ def test_web_rejects_unknown_static_assets_and_bad_hosts(web_server: str):
     status, _, body = _request(web_server, "/api/stats", host="evil.example.com")
     assert status == 403
     assert body == b"Forbidden"
+
+
+def test_web_api_edge_cases(web_server: str):
+    # Bad limit and offset (ValueError fallback to 0)
+    status, _, body = _request(web_server, "/api/conversations?limit=abc&offset=xyz")
+    assert status == 200
+    assert len(json.loads(body)) == 1
+
+    # Empty search query
+    status, _, body = _request(web_server, "/api/search?q=")
+    assert status == 200
+    assert json.loads(body) == []
+
+    # Invalid and non-existent IDs for GET
+    status, _, body = _request(web_server, "/api/conversation/abc")
+    assert status == 400
+    status, _, body = _request(web_server, "/api/conversation/999")
+    assert status == 404
+
+    # Invalid and non-existent IDs for POST favorite
+    status, _, body = _request(web_server, "/api/conversation/abc/favorite", method="POST")
+    assert status == 400
+    status, _, body = _request(web_server, "/api/conversation/999/favorite", method="POST")
+    assert status == 404
+
+    # 404 routes
+    status, _, body = _request(web_server, "/api/unknown")
+    assert status == 404
+    status, _, body = _request(web_server, "/api/stats", method="POST")
+    assert status == 404
+
+    # Forbidden POST (host header invalid)
+    status, _, body = _request(web_server, "/api/conversation/1/favorite", method="POST", host="evil.example.com")
+    assert status == 403
+
+
+def test_web_api_stats_and_activity(web_server: str):
+    status, _, body = _request(web_server, "/api/stats")
+    assert status == 200
+    stats = json.loads(body)
+    assert stats["conversations"] == 1
+    assert stats["messages"] == 1
+
+    status, _, body = _request(web_server, "/api/activity")
+    assert status == 200
+    activity = json.loads(body)
+    assert len(activity) == 1
+    assert activity[0]["month"] == "2025-01"
+    assert activity[0]["n"] == 1
