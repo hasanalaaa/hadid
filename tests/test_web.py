@@ -146,7 +146,9 @@ def test_web_api_edge_cases(web_server: str):
     assert status == 404
 
     # Forbidden POST (host header invalid)
-    status, _, body = _request(web_server, "/api/conversation/1/favorite", method="POST", host="evil.example.com")
+    status, _, body = _request(
+        web_server, "/api/conversation/1/favorite", method="POST", host="evil.example.com"
+    )
     assert status == 403
 
 
