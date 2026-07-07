@@ -4,22 +4,23 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
+from ..models import ImportedConversation, Message, SortableMessage
 from . import first_original_id, load_json_from_path, source_id_for, unix_to_iso
 
 
-def parse_export(path: str) -> Iterator[dict[str, Any]]:
+def parse_export(path: str) -> Iterator[ImportedConversation]:
     """Yield normalized conversations from a ChatGPT export file or ZIP."""
     return parse_data(load_json_from_path(path))
 
 
-def parse_data(data: Any) -> Iterator[dict[str, Any]]:
+def parse_data(data: Any) -> Iterator[ImportedConversation]:
     """Yield normalized conversations from parsed ChatGPT export data."""
     if not isinstance(data, list):
         raise ValueError("Unexpected ChatGPT export format: expected a JSON list")
 
     for conv in data:
         mapping = conv.get("mapping") or {}
-        messages: list[dict[str, Any]] = []
+        messages: list[SortableMessage] = []
         for node in mapping.values():
             msg = (node or {}).get("message")
             if not msg:
@@ -40,7 +41,15 @@ def parse_data(data: Any) -> Iterator[dict[str, Any]]:
                     "_sort": msg.get("create_time") or 0,
                 }
             )
-        messages.sort(key=lambda m: m.pop("_sort"))
+        messages.sort(key=lambda m: m["_sort"])
+        normalized_messages: list[Message] = [
+            {
+                "role": m["role"],
+                "content": m["content"],
+                "created_at": m["created_at"],
+            }
+            for m in messages
+        ]
         title = conv.get("title") or "Untitled"
         created_at = unix_to_iso(conv.get("create_time"))
         source_id, generated = source_id_for(
@@ -48,13 +57,13 @@ def parse_data(data: Any) -> Iterator[dict[str, Any]]:
             first_original_id(conv.get("id"), conv.get("conversation_id")),
             title=title,
             created_at=created_at,
-            messages=messages,
+            messages=normalized_messages,
         )
         yield {
             "source": "chatgpt",
             "source_id": source_id,
             "title": title,
             "created_at": created_at,
-            "messages": messages,
+            "messages": normalized_messages,
             "_source_id_generated": generated,
         }

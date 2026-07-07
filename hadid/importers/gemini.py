@@ -9,20 +9,21 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
+from ..models import ImportedConversation, Message, SortableMessage
 from . import load_json_from_path, source_id_for
 
 
-def parse_export(path: str) -> Iterator[dict[str, Any]]:
+def parse_export(path: str) -> Iterator[ImportedConversation]:
     """Yield normalized conversations from a Takeout export file or ZIP."""
     return parse_data(load_json_from_path(path))
 
 
-def parse_data(data: Any) -> Iterator[dict[str, Any]]:
+def parse_data(data: Any) -> Iterator[ImportedConversation]:
     """Yield normalized conversations from parsed Takeout activity data."""
     if not isinstance(data, list):
         raise ValueError("Unexpected Gemini export format: expected a JSON list")
 
-    messages: list[dict[str, Any]] = []
+    messages: list[SortableMessage] = []
     for item in data:
         if not isinstance(item, dict):
             continue
@@ -46,22 +47,30 @@ def parse_data(data: Any) -> Iterator[dict[str, Any]]:
                 {"role": "assistant", "content": answer, "created_at": when,
                  "_sort": (when or "") + "1"}
             )
-    messages.sort(key=lambda m: m.pop("_sort"))
+    messages.sort(key=lambda m: m["_sort"])
+    normalized_messages: list[Message] = [
+        {
+            "role": m["role"],
+            "content": m["content"],
+            "created_at": m["created_at"],
+        }
+        for m in messages
+    ]
 
     title = "Gemini prompt history"
-    created_at = messages[0]["created_at"] if messages else None
+    created_at = normalized_messages[0]["created_at"] if normalized_messages else None
     source_id, generated = source_id_for(
         "gemini",
         None,
         title=title,
         created_at=created_at,
-        messages=messages,
+        messages=normalized_messages,
     )
     yield {
         "source": "gemini",
         "source_id": source_id,
         "title": title,
         "created_at": created_at,
-        "messages": messages,
+        "messages": normalized_messages,
         "_source_id_generated": generated,
     }

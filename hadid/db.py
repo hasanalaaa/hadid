@@ -9,6 +9,8 @@ from pathlib import Path
 from types import TracebackType
 from typing import Any
 
+from .models import Conversation, Message, StoredConversation
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_DB_PATH = str(Path.home() / ".hadid" / "hadid.db")
@@ -113,14 +115,14 @@ class Archive:
     def close(self) -> None:
         self.conn.close()
 
-    def add_conversation(self, conv: dict[str, Any]) -> tuple[str, int] | None:
+    def add_conversation(self, conv: Conversation) -> tuple[str, int] | None:
         """Insert or incrementally update one normalized conversation.
 
         Returns ``("added", n_messages)`` for a new conversation,
         ``("updated", n_new_messages)`` when new messages were merged into
         an existing one, or ``None`` when nothing changed.
         """
-        incoming = conv.get("messages", [])
+        incoming = conv["messages"]
         cur = self.conn.execute(
             "SELECT id FROM conversations WHERE source = ? AND source_id = ?",
             (conv["source"], conv["source_id"]),
@@ -158,7 +160,7 @@ class Archive:
         return ("added", len(incoming))
 
     def _insert_messages(
-        self, conv_id: int, messages: list[dict[str, Any]]
+        self, conv_id: int, messages: list[Message]
     ) -> None:
         rows = [
             (conv_id, m["role"], m["content"], m.get("created_at"))
@@ -217,23 +219,37 @@ class Archive:
         cur = self.conn.execute(sql, params)
         return [dict(r) for r in cur.fetchall()]
 
-    def get_conversation(self, conv_id: int) -> dict[str, Any] | None:
+    def get_conversation(self, conv_id: int) -> StoredConversation | None:
         cur = self.conn.execute(
-            "SELECT id, source, title, created_at, favorite"
+            "SELECT id, source, source_id, title, created_at, favorite"
             " FROM conversations WHERE id = ?",
             (conv_id,),
         )
         row = cur.fetchone()
         if row is None:
             return None
-        conv = dict(row)
         cur = self.conn.execute(
             "SELECT role, content, created_at FROM messages"
             " WHERE conversation_id = ? ORDER BY id",
             (conv_id,),
         )
-        conv["messages"] = [dict(r) for r in cur.fetchall()]
-        return conv
+        messages: list[Message] = [
+            {
+                "role": str(r["role"]),
+                "content": str(r["content"]),
+                "created_at": r["created_at"],
+            }
+            for r in cur.fetchall()
+        ]
+        return {
+            "id": int(row["id"]),
+            "source": str(row["source"]),
+            "source_id": str(row["source_id"]),
+            "title": str(row["title"] or "Untitled"),
+            "created_at": row["created_at"],
+            "favorite": int(row["favorite"]),
+            "messages": messages,
+        }
 
     def toggle_favorite(self, conv_id: int) -> int | None:
         """Toggle a conversation's favorite flag. Returns the new value

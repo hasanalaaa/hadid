@@ -23,7 +23,9 @@ import logging
 import zipfile
 from datetime import datetime, timezone
 from hashlib import sha256
-from typing import Any
+from typing import Any, Sequence
+
+from ..models import Message
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +72,7 @@ def source_id_for(
     *,
     title: str | None,
     created_at: str | None,
-    messages: list[dict[str, Any]],
+    messages: Sequence[Message],
 ) -> tuple[str, bool]:
     """Return a stable source id and whether it had to be generated.
 

@@ -99,10 +99,10 @@ class _Handler(BaseHTTPRequestHandler):
             source = qs.get("source", [None])[0]
             favorites = qs.get("favorites", ["0"])[0] in ("1", "true")
             with self.lock:
-                data = self.archive.list_conversations(
+                conversations = self.archive.list_conversations(
                     source=source, favorites_only=favorites
                 )
-            self._json(data)
+            self._json(conversations)
         elif path == "/api/search":
             query = qs.get("q", [""])[0]
             source = qs.get("source", [None])[0]
@@ -110,16 +110,16 @@ class _Handler(BaseHTTPRequestHandler):
                 self._json([])
                 return
             with self.lock:
-                data = self.archive.search(query, source=source)
-            self._json(data)
+                results = self.archive.search(query, source=source)
+            self._json(results)
         elif path == "/api/stats":
             with self.lock:
-                data = self.archive.stats()
-            self._json(data)
+                stats = self.archive.stats()
+            self._json(stats)
         elif path == "/api/activity":
             with self.lock:
-                data = self.archive.activity()
-            self._json(data)
+                activity = self.archive.activity()
+            self._json(activity)
         elif path.startswith("/api/conversation/"):
             try:
                 conv_id = int(path.rsplit("/", 1)[1])

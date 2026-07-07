@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Iterator
 
+from ..models import ImportedConversation, Message
 from . import load_json_from_path, source_id_for
 
 
@@ -20,18 +21,18 @@ def _message_text(m: dict[str, Any]) -> str:
     return "\n".join(p for p in parts if p).strip()
 
 
-def parse_export(path: str) -> Iterator[dict[str, Any]]:
+def parse_export(path: str) -> Iterator[ImportedConversation]:
     """Yield normalized conversations from a Claude export file or ZIP."""
     return parse_data(load_json_from_path(path))
 
 
-def parse_data(data: Any) -> Iterator[dict[str, Any]]:
+def parse_data(data: Any) -> Iterator[ImportedConversation]:
     """Yield normalized conversations from parsed Claude export data."""
     if not isinstance(data, list):
         raise ValueError("Unexpected Claude export format: expected a JSON list")
 
     for conv in data:
-        messages: list[dict[str, Any]] = []
+        messages: list[Message] = []
         for m in conv.get("chat_messages") or []:
             text = _message_text(m)
             if not text:

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+
+from .models import Conversation
 
 
 def safe_filename(title: str | None, max_length: int = 60) -> str:
@@ -13,18 +14,20 @@ def safe_filename(title: str | None, max_length: int = 60) -> str:
     return (name or "untitled")[:max_length]
 
 
-def conversation_to_markdown(conv: dict[str, Any]) -> str:
+def conversation_to_markdown(conv: Conversation) -> str:
     """Render a full conversation dict as a Markdown document."""
-    lines = ["# " + (conv.get("title") or "Untitled"), ""]
-    lines.append("- **Source:** " + str(conv.get("source", "unknown")))
-    if conv.get("created_at"):
-        lines.append("- **Created:** " + conv["created_at"])
+    lines = ["# " + (conv["title"] or "Untitled"), ""]
+    lines.append("- **Source:** " + conv["source"])
+    created_at = conv["created_at"]
+    if created_at:
+        lines.append("- **Created:** " + created_at)
     lines.append("")
     for m in conv.get("messages", []):
         who = "You" if m["role"] == "user" else "Assistant"
         lines.append("## " + who)
-        if m.get("created_at"):
-            lines.append("*" + m["created_at"] + "*")
+        message_created_at = m["created_at"]
+        if message_created_at:
+            lines.append("*" + message_created_at + "*")
         lines.append("")
         lines.append(m["content"])
         lines.append("")
