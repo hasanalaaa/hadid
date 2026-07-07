@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS conversations (
     title TEXT,
     created_at TEXT,
     favorite INTEGER NOT NULL DEFAULT 0,
+    message_count INTEGER NOT NULL DEFAULT 0,
     UNIQUE(source, source_id)
 );
 CREATE TABLE IF NOT EXISTS messages (
@@ -39,10 +40,14 @@ CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
 );
 CREATE TRIGGER IF NOT EXISTS messages_ai AFTER INSERT ON messages BEGIN
     INSERT INTO messages_fts(rowid, content) VALUES (new.id, new.content);
+    UPDATE conversations SET message_count = message_count + 1
+        WHERE id = new.conversation_id;
 END;
 CREATE TRIGGER IF NOT EXISTS messages_ad AFTER DELETE ON messages BEGIN
     INSERT INTO messages_fts(messages_fts, rowid, content)
     VALUES ('delete', old.id, old.content);
+    UPDATE conversations SET message_count = message_count - 1
+        WHERE id = old.conversation_id;
 END;
 """
 
@@ -112,6 +117,22 @@ class Archive:
         except sqlite3.OperationalError:
             pass  # column already exists
 
+        try:
+            self.conn.execute(
+                "ALTER TABLE conversations"
+                " ADD COLUMN message_count INTEGER NOT NULL DEFAULT 0"
+            )
+            # Backfill from existing data
+            self.conn.execute(
+                "UPDATE conversations SET message_count ="
+                " (SELECT COUNT(*) FROM messages"
+                "  WHERE messages.conversation_id = conversations.id)"
+            )
+            self.conn.commit()
+            logger.info("migrated archive: added conversations.message_count")
+        except sqlite3.OperationalError:
+            pass  # column already exists
+
     def close(self) -> None:
         self.conn.close()
 
@@ -124,17 +145,14 @@ class Archive:
         """
         incoming = conv["messages"]
         cur = self.conn.execute(
-            "SELECT id FROM conversations WHERE source = ? AND source_id = ?",
+            "SELECT id, message_count FROM conversations"
+            " WHERE source = ? AND source_id = ?",
             (conv["source"], conv["source_id"]),
         )
         row = cur.fetchone()
         if row is not None:
             conv_id = int(row["id"])
-            cur = self.conn.execute(
-                "SELECT COUNT(*) AS n FROM messages WHERE conversation_id = ?",
-                (conv_id,),
-            )
-            existing = int(cur.fetchone()["n"])
+            existing = int(row["message_count"])
             if len(incoming) <= existing:
                 return None
             self.conn.execute(
@@ -198,24 +216,33 @@ class Archive:
         return [dict(r) for r in cur.fetchall()]
 
     def list_conversations(
-        self, source: str | None = None, favorites_only: bool = False
+        self,
+        source: str | None = None,
+        favorites_only: bool = False,
+        limit: int = 0,
+        offset: int = 0,
     ) -> list[dict[str, Any]]:
+        """List conversations using the denormalized message_count column.
+
+        Pass ``limit > 0`` for pagination.  ``limit=0`` (default) returns all.
+        """
         where: list[str] = []
         params: list[Any] = []
         if source:
-            where.append("c.source = ?")
+            where.append("source = ?")
             params.append(source)
         if favorites_only:
-            where.append("c.favorite = 1")
+            where.append("favorite = 1")
         sql = (
-            "SELECT c.id, c.source, c.title, c.created_at, c.favorite,"
-            " COUNT(m.id) AS message_count"
-            " FROM conversations c"
-            " LEFT JOIN messages m ON m.conversation_id = c.id"
+            "SELECT id, source, title, created_at, favorite, message_count"
+            " FROM conversations"
         )
         if where:
             sql += " WHERE " + " AND ".join(where)
-        sql += " GROUP BY c.id ORDER BY c.created_at DESC"
+        sql += " ORDER BY created_at DESC"
+        if limit > 0:
+            sql += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
         cur = self.conn.execute(sql, params)
         return [dict(r) for r in cur.fetchall()]
 

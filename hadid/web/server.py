@@ -98,9 +98,18 @@ class _Handler(BaseHTTPRequestHandler):
         elif path == "/api/conversations":
             source = qs.get("source", [None])[0]
             favorites = qs.get("favorites", ["0"])[0] in ("1", "true")
+            try:
+                limit = int(qs.get("limit", ["0"])[0])
+            except ValueError:
+                limit = 0
+            try:
+                offset = int(qs.get("offset", ["0"])[0])
+            except ValueError:
+                offset = 0
             with self.lock:
                 conversations = self.archive.list_conversations(
-                    source=source, favorites_only=favorites
+                    source=source, favorites_only=favorites,
+                    limit=limit, offset=offset,
                 )
             self._json(conversations)
         elif path == "/api/search":
