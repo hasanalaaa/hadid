@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import sqlite3
+from hashlib import sha256
 from pathlib import Path
 from types import TracebackType
 from typing import Any
@@ -31,7 +32,8 @@ CREATE TABLE IF NOT EXISTS messages (
     conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
     role TEXT NOT NULL,
     content TEXT NOT NULL,
-    created_at TEXT
+    created_at TEXT,
+    content_hash TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_messages_conversation
     ON messages(conversation_id);
@@ -65,6 +67,19 @@ def _fts_query(query: str) -> str:
     """Quote each token so user input can never break FTS5 syntax."""
     tokens = [t for t in query.split() if t]
     return " ".join('"' + t.replace('"', '""') + '"' for t in tokens)
+
+
+def _message_hash(m: Message) -> str:
+    """Deterministic hash for a single message's content.
+
+    Uses null-byte separators to prevent field-boundary collisions.
+    """
+    raw = "\0".join([
+        m.get("role") or "",
+        m.get("content") or "",
+        m.get("created_at") or "",
+    ])
+    return sha256(raw.encode("utf-8")).hexdigest()
 
 
 class Archive:
@@ -133,6 +148,15 @@ class Archive:
         except sqlite3.OperationalError:
             pass  # column already exists
 
+        try:
+            self.conn.execute(
+                "ALTER TABLE messages ADD COLUMN content_hash TEXT"
+            )
+            self.conn.commit()
+            logger.info("migrated archive: added messages.content_hash")
+        except sqlite3.OperationalError:
+            pass  # column already exists
+
     def close(self) -> None:
         self.conn.close()
 
@@ -142,8 +166,15 @@ class Archive:
         Returns ``("added", n_messages)`` for a new conversation,
         ``("updated", n_new_messages)`` when new messages were merged into
         an existing one, or ``None`` when nothing changed.
+
+        Uses content hashing to detect changes more accurately than
+        count-based comparison alone:
+        - Identical hash sets → skip (even if ordering changed)
+        - All stored hashes are a prefix of incoming → append only new
+        - Otherwise → full re-insert (content diverged)
         """
         incoming = conv["messages"]
+        incoming_hashes = [_message_hash(m) for m in incoming]
         cur = self.conn.execute(
             "SELECT id, message_count FROM conversations"
             " WHERE source = ? AND source_id = ?",
@@ -152,16 +183,55 @@ class Archive:
         row = cur.fetchone()
         if row is not None:
             conv_id = int(row["id"])
-            existing = int(row["message_count"])
-            if len(incoming) <= existing:
+            existing_count = int(row["message_count"])
+
+            # Fetch stored hashes in insertion order
+            cur = self.conn.execute(
+                "SELECT content_hash FROM messages"
+                " WHERE conversation_id = ? ORDER BY id",
+                (conv_id,),
+            )
+            stored_hashes = [r["content_hash"] for r in cur.fetchall()]
+
+            # Fast path: identical hash sequences → nothing changed
+            if stored_hashes == incoming_hashes:
                 return None
+
+            # Check if stored hashes lack content_hash (pre-migration data)
+            # or if stored is a prefix of incoming (append-only case)
+            has_hashes = all(h is not None for h in stored_hashes)
+            if (
+                has_hashes
+                and len(stored_hashes) < len(incoming_hashes)
+                and incoming_hashes[:len(stored_hashes)] == stored_hashes
+            ):
+                # Append only the truly new messages
+                new_messages = incoming[len(stored_hashes):]
+                self._insert_messages(conv_id, new_messages)
+                self.conn.commit()
+                n_new = len(new_messages)
+                logger.info(
+                    "appended %d message(s) to conversation %s", n_new, conv_id
+                )
+                return ("updated", n_new)
+
+            # Fallback: content diverged or legacy data without hashes —
+            # delete all and re-insert.  Also covers len(incoming) <= existing
+            # when content actually changed.
+            if len(incoming) <= existing_count and has_hashes:
+                # Fewer or equal messages but different hashes: content changed
+                pass  # fall through to delete + re-insert
+            elif len(incoming) <= existing_count:
+                # Legacy path (no hashes): same count-based skip as before
+                return None
+
             self.conn.execute(
                 "DELETE FROM messages WHERE conversation_id = ?", (conv_id,)
             )
             self._insert_messages(conv_id, incoming)
             self.conn.commit()
             logger.info("updated conversation %s with new messages", conv_id)
-            return ("updated", len(incoming) - existing)
+            return ("updated", len(incoming) - existing_count)
         cur = self.conn.execute(
             "INSERT INTO conversations (source, source_id, title, created_at)"
             " VALUES (?, ?, ?, ?)",
@@ -181,12 +251,19 @@ class Archive:
         self, conv_id: int, messages: list[Message]
     ) -> None:
         rows = [
-            (conv_id, m["role"], m["content"], m.get("created_at"))
+            (
+                conv_id,
+                m["role"],
+                m["content"],
+                m.get("created_at"),
+                _message_hash(m),
+            )
             for m in messages
         ]
         self.conn.executemany(
-            "INSERT INTO messages (conversation_id, role, content, created_at)"
-            " VALUES (?, ?, ?, ?)",
+            "INSERT INTO messages"
+            " (conversation_id, role, content, created_at, content_hash)"
+            " VALUES (?, ?, ?, ?, ?)",
             rows,
         )
 

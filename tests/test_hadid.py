@@ -321,3 +321,98 @@ def test_safe_filename():
 def test_search_handles_special_characters():
     with Archive(":memory:") as archive:
         assert archive.search('"broken OR (syntax') == []  # must not raise
+
+
+def test_incremental_append_only():
+    """When new messages are appended but existing ones are unchanged,
+    only the new messages should be inserted (no delete+re-insert)."""
+    with Archive(":memory:") as archive:
+        conv = _conv("chatgpt", "append-test", "Append", "first message")
+        assert archive.add_conversation(conv) == ("added", 1)
+
+        # Append a second message — same first message is preserved
+        conv["messages"].append(
+            {"role": "assistant", "content": "second reply", "created_at": None}
+        )
+        result = archive.add_conversation(conv)
+        assert result == ("updated", 1)
+
+        convs = archive.list_conversations()
+        assert convs[0]["message_count"] == 2
+
+        # FTS stays in sync
+        assert len(archive.search("second reply")) == 1
+        assert len(archive.search("first message")) == 1
+
+        # Append a third message
+        conv["messages"].append(
+            {"role": "user", "content": "third question", "created_at": None}
+        )
+        result = archive.add_conversation(conv)
+        assert result == ("updated", 1)
+        assert archive.list_conversations()[0]["message_count"] == 3
+
+
+def test_incremental_detects_content_change():
+    """When message content changes (not just count), the update is detected."""
+    with Archive(":memory:") as archive:
+        conv = _conv("chatgpt", "change-test", "Change", "original content")
+        assert archive.add_conversation(conv) == ("added", 1)
+
+        # Modify the existing message's content (same count, different hash)
+        conv["messages"][0] = {
+            "role": "user", "content": "modified content", "created_at": None
+        }
+        result = archive.add_conversation(conv)
+        assert result == ("updated", 0)  # same count, content diverged
+
+        # Verify the content was actually updated
+        full = archive.get_conversation(1)
+        assert full is not None
+        assert full["messages"][0]["content"] == "modified content"
+
+
+def test_content_hash_is_deterministic():
+    """The same message always produces the same hash."""
+    from hadid.db import _message_hash
+
+    msg = {"role": "user", "content": "Hello world", "created_at": "2025-01-01T00:00:00Z"}
+    h1 = _message_hash(msg)
+    h2 = _message_hash(msg)
+    assert h1 == h2
+    assert len(h1) == 64  # sha256 hex digest
+
+    # Different content produces different hash
+    msg2 = {"role": "user", "content": "Different", "created_at": "2025-01-01T00:00:00Z"}
+    assert _message_hash(msg2) != h1
+
+
+def test_list_conversations_pagination():
+    """Pagination via limit/offset works correctly."""
+    with Archive(":memory:") as archive:
+        for i in range(5):
+            conv = _conv("chatgpt", f"pg-{i}", f"Conv {i}", f"msg {i}")
+            archive.add_conversation(conv)
+
+        # All conversations
+        assert len(archive.list_conversations()) == 5
+
+        # First page
+        page1 = archive.list_conversations(limit=2, offset=0)
+        assert len(page1) == 2
+
+        # Second page
+        page2 = archive.list_conversations(limit=2, offset=2)
+        assert len(page2) == 2
+
+        # No overlap
+        ids1 = {c["id"] for c in page1}
+        ids2 = {c["id"] for c in page2}
+        assert ids1.isdisjoint(ids2)
+
+        # Last page (partial)
+        page3 = archive.list_conversations(limit=2, offset=4)
+        assert len(page3) == 1
+
+        # limit=0 returns all (default behavior)
+        assert len(archive.list_conversations(limit=0)) == 5
