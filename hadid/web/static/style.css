@@ -120,3 +120,30 @@
   .btn:focus-visible,.chip:focus-visible,#q:focus-visible,.item:focus-visible{outline:2px solid var(--a1);outline-offset:2px}
   @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion: reduce){.msg,.dash{animation:none}}
+
+  /* Mobile Responsive Adjustments */
+  @media (max-width: 768px) {
+    header { flex-wrap: wrap; padding: 10px 14px; gap: 10px; }
+    .searchwrap { order: 3; max-width: none; flex-basis: 100%; }
+    #stats { margin-left: auto; }
+    #stats .pill b { font-weight: normal; }
+    #stats .pill { font-size: 11px; padding: 4px 8px; }
+    
+    main { position: relative; }
+    aside { width: 100%; min-width: auto; border-right: none; }
+    section { display: none; width: 100%; }
+    
+    body.viewing-chat aside { display: none; }
+    body.viewing-chat section { display: flex; }
+    
+    #backbtn { display: block !important; }
+    
+    .convhead { padding: 12px 14px; gap: 10px; }
+    #msgs { padding: 16px 14px; }
+    .msg { gap: 10px; }
+    
+    .cards { grid-template-columns: 1fr; gap: 10px; }
+    .card { padding: 14px; }
+    .chart { padding: 14px; overflow-x: auto; }
+    .chart svg { min-width: 500px; } /* enable horizontal scroll for chart */
+  }

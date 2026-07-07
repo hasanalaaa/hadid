@@ -138,6 +138,7 @@ function openConv(id){
   state.current = id;
   api('/api/conversation/' + id).then(function(c){
     state.currentConv = c;
+    document.body.classList.add('viewing-chat');
     document.getElementById('convhead').hidden = false;
     document.getElementById('ctitle').textContent = c.title || 'Untitled';
     var meta = document.getElementById('cmeta');
@@ -288,9 +289,14 @@ function showHome(){
 document.getElementById('logo').onclick = function(){
   state.current = null;
   state.currentConv = null;
+  document.body.classList.remove('viewing-chat');
   document.getElementById('convhead').hidden = true;
   showHome();
   refresh();
+};
+
+document.getElementById('backbtn').onclick = function(){
+  document.getElementById('logo').onclick();
 };
 
 function applyTheme(t){
