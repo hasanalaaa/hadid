@@ -59,7 +59,7 @@ function refresh(){
   if (query){
     var url = '/api/search?q=' + encodeURIComponent(query);
     if (state.source) url += '&source=' + state.source;
-    api(url).then(renderResults);
+    api(url).then(function(results){ renderResults(results, query); });
   } else {
     var url2 = '/api/conversations';
     var params = [];
@@ -73,7 +73,8 @@ function refresh(){
 function renderConversations(convs){
   listEl.textContent = '';
   if (!convs.length){
-    listEl.appendChild(el('div', 'item', 'Nothing here yet.'));
+    var msg = (state.source || state.favorites) ? 'No conversations match the selected filters.' : 'No conversations found.';
+    listEl.appendChild(el('div', 'item', msg));
     return;
   }
   convs.forEach(function(c){
@@ -108,10 +109,10 @@ function snippetEl(s){
   return d;
 }
 
-function renderResults(results){
+function renderResults(results, query){
   listEl.textContent = '';
   if (!results.length){
-    listEl.appendChild(el('div', 'item', 'No results.'));
+    listEl.appendChild(el('div', 'item', 'No results found for "' + query + '"'));
     return;
   }
   results.forEach(function(r){
