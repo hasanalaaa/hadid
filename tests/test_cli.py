@@ -268,7 +268,17 @@ def test_error_paths(tmp_path, capsys):
     db = str(tmp_path / "a.db")
 
     assert main(["--db", db, "import", "chatgpt", "missing.json"]) == 1
-    assert "file not found" in capsys.readouterr().err
+    assert "File not found" in capsys.readouterr().err
+
+    bad_zip = tmp_path / "bad.zip"
+    bad_zip.write_text("not a zip", encoding="utf-8")
+    assert main(["--db", db, "import", "chatgpt", str(bad_zip)]) == 1
+    assert "not a valid ZIP" in capsys.readouterr().err
+
+    bad_json = tmp_path / "bad.json"
+    bad_json.write_text("{invalid json", encoding="utf-8")
+    assert main(["--db", db, "import", "claude", str(bad_json)]) == 1
+    assert "JSON file is invalid" in capsys.readouterr().err
 
     bad = tmp_path / "bad.json"
     bad.write_text(json.dumps([1, 2, 3]), encoding="utf-8")

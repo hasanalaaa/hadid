@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
+import sqlite3
 import sys
+import zipfile
 from pathlib import Path
 
 from . import __version__
@@ -33,8 +36,11 @@ def cmd_import(args: argparse.Namespace) -> None:
         platform = detect_platform(data)
         print(f"Detected platform: {platform}")
     added = updated = skipped = messages = 0
+    print("Importing conversations, this might take a moment...")
     with Archive(args.db) as archive:
-        for conv in IMPORTERS[platform](data):
+        for i, conv in enumerate(IMPORTERS[platform](data)):
+            if i > 0 and i % 500 == 0:
+                print(f"  ...processed {i} conversations", file=sys.stderr)
             if conv.get("_source_id_generated"):
                 print(
                     "Warning: "
@@ -199,7 +205,25 @@ def main(argv: list[str] | None = None) -> int:
     try:
         args.func(args)
     except FileNotFoundError as e:
-        print(f"Error: file not found: {e.filename}", file=sys.stderr)
+        print(
+            f"Error: File not found: {e.filename}. Please check the path and try again.",
+            file=sys.stderr,
+        )
+        return 1
+    except PermissionError as e:
+        print(f"Error: Permission denied. Cannot access {e.filename}.", file=sys.stderr)
+        return 1
+    except zipfile.BadZipFile:
+        print(
+            "Error: The ZIP file appears to be corrupted or is not a valid ZIP archive.",
+            file=sys.stderr,
+        )
+        return 1
+    except json.JSONDecodeError:
+        print("Error: The JSON file is invalid or corrupted.", file=sys.stderr)
+        return 1
+    except sqlite3.Error as e:
+        print(f"Database Error: {e}", file=sys.stderr)
         return 1
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
