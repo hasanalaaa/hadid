@@ -1,6 +1,6 @@
   :root{
     --bg:#07090f; --panel:rgba(255,255,255,.03); --panel2:rgba(255,255,255,.06);
-    --border:rgba(255,255,255,.08); --text:#e8eaf2; --muted:#8a90a6;
+    --border:rgba(255,255,255,.08); --text:#e8eaf2; --muted:#9ca3af;
     --a1:#6366f1; --a2:#a855f7; --bar:rgba(10,12,20,.6);
   }
   body.light{

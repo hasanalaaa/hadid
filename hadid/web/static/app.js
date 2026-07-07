@@ -88,7 +88,8 @@ function renderConversations(convs){
     item.appendChild(t);
     item.appendChild(m);
     item.tabIndex = 0;
-    item.onkeydown = function(ev){ if (ev.key === 'Enter') item.onclick(); };
+    item.setAttribute('role', 'button');
+    item.onkeydown = function(ev){ if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); item.onclick(); } };
     item.onclick = function(){ openConv(c.id); };
     listEl.appendChild(item);
   });
@@ -122,7 +123,8 @@ function renderResults(results){
     item.appendChild(m);
     item.appendChild(snippetEl(r.snippet));
     item.tabIndex = 0;
-    item.onkeydown = function(ev){ if (ev.key === 'Enter') item.onclick(); };
+    item.setAttribute('role', 'button');
+    item.onkeydown = function(ev){ if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); item.onclick(); } };
     item.onclick = function(){ openConv(r.conversation_id); };
     listEl.appendChild(item);
   });
@@ -293,6 +295,9 @@ document.getElementById('logo').onclick = function(){
   document.getElementById('convhead').hidden = true;
   showHome();
   refresh();
+};
+document.getElementById('logo').onkeydown = function(ev){
+  if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); this.onclick(); }
 };
 
 document.getElementById('backbtn').onclick = function(){
