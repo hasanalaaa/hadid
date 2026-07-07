@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hadid \u2014 your AI conversations</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="logo" id="logo" title="Dashboard">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="24" y2="24">
+        <stop stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/>
+      </linearGradient></defs>
+      <path d="M12 2 L21 7 V17 L12 22 L3 17 V7 Z" stroke="url(#g)" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M9 9 V15 M15 9 V15 M9 12 H15" stroke="url(#g)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    Hadid
+  </div>
+  <div class="searchwrap">
+    <input id="q" placeholder="Search everything you ever discussed with AI..." autocomplete="off" aria-label="Search conversations">
+    <span class="kbd">/</span>
+  </div>
+  <div id="stats"></div>
+  <button class="btn" id="themebtn" title="Toggle theme" aria-label="Toggle color theme">\u263e</button>
+</header>
+<main>
+  <aside>
+    <div class="chips" id="chips"></div>
+    <div id="list"></div>
+  </aside>
+  <section>
+    <div class="convhead" id="convhead" hidden>
+      <div class="grow">
+        <div class="title" id="ctitle"></div>
+        <div class="meta" id="cmeta"></div>
+      </div>
+      <button class="btn" id="favbtn"></button>
+      <button class="btn" id="mdbtn">Export .md</button>
+    </div>
+    <div id="msgs"></div>
+  </section>
+</main>
+<script src="/static/app.js" defer></script>
+</body>
+</html>
+

@@ -102,7 +102,7 @@ hadid/
 ├─ importers/     # chatgpt.py, claude.py, gemini.py — add yours here
 ├─ db.py          # SQLite + FTS5 archive with schema migrations
 ├─ export.py      # Markdown export
-├─ web.py         # self-contained local web app (stdlib http.server)
+├─ web/           # self-contained local web app (stdlib http.server + bundled assets)
 └─ cli.py         # argparse CLI
 ```
 
