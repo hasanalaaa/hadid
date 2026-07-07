@@ -77,7 +77,10 @@ def _chatgpt_conversations():
                         "create_time": 1736000001.0,
                         "content": {
                             "content_type": "text",
-                            "parts": ["\u0645\u0627 \u0623\u0641\u0636\u0644 \u0644\u063a\u0629 \u0644\u0644\u0645\u0628\u062a\u062f\u0626\u064a\u0646\u061f"],
+                            "parts": [
+                                "\u0645\u0627 \u0623\u0641\u0636\u0644 \u0644\u063a\u0629 "
+                                "\u0644\u0644\u0645\u0628\u062a\u062f\u0626\u064a\u0646\u061f"
+                            ],
                         },
                     },
                     "parent": "r", "children": ["m2"],
@@ -89,7 +92,11 @@ def _chatgpt_conversations():
                         "create_time": 1736000010.0,
                         "content": {
                             "content_type": "text",
-                            "parts": ["\u0628\u0627\u064a\u062b\u0648\u0646 \u062e\u064a\u0627\u0631 \u0645\u0645\u062a\u0627\u0632 \u0644\u0644\u0645\u0628\u062a\u062f\u0626\u064a\u0646."],
+                            "parts": [
+                                "\u0628\u0627\u064a\u062b\u0648\u0646 "
+                                "\u062e\u064a\u0627\u0631 \u0645\u0645\u062a\u0627\u0632 "
+                                "\u0644\u0644\u0645\u0628\u062a\u062f\u0626\u064a\u0646."
+                            ],
                         },
                     },
                     "parent": "m1", "children": ["m3"],
