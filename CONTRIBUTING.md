@@ -9,7 +9,7 @@ Thanks for your interest! The most valuable contributions right now:
 ## Development setup
 
 ```bash
-git clone https://github.com/USERNAME/hadid.git
+git clone https://github.com/hasanalaaa/hadid.git
 cd hadid
 pip install -e .[dev]
 pytest

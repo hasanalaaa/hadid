@@ -2,7 +2,7 @@
 
 **Own your AI conversations.**
 
-[![Pipeline](https://github.com/USERNAME/hadid/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/hadid/actions)
+[![CI](https://github.com/hasanalaaa/hadid/actions/workflows/ci.yml/badge.svg)](https://github.com/hasanalaaa/hadid/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-6366f1.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](pyproject.toml)
 [![Dependencies: zero](https://img.shields.io/badge/dependencies-zero-success.svg)](pyproject.toml)
@@ -23,7 +23,12 @@ Your prompts and answers are some of your most valuable notes. Today they are lo
 ## Quickstart
 
 ```bash
-pip install -e .        # from a clone (PyPI release coming)
+pip install git+https://github.com/hasanalaaa/hadid.git
+
+# Or, from a local clone:
+git clone https://github.com/hasanalaaa/hadid.git
+cd hadid
+pip install -e .
 
 # 1. Export your data (see below), then import it.
 #    Platform is auto-detected - straight from the ZIP:
@@ -104,10 +109,10 @@ hadid/
 ## Development
 
 ```bash
-git clone https://github.com/USERNAME/hadid.git && cd hadid
+git clone https://github.com/hasanalaaa/hadid.git && cd hadid
 pip install -e .[dev]
-pytest -q          # full suite, incl. end-to-end CLI tests
-ruff check .       # lint
+python3 -m pytest -v      # full suite, incl. end-to-end CLI tests
+python3 -m ruff check .   # lint
 ```
 
 CI lints and runs the test suite on Python 3.9, 3.11, and 3.13 for every

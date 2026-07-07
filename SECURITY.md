@@ -27,7 +27,8 @@ Only the latest release receives security fixes.
 
 ## Reporting a vulnerability
 
-Please open a **confidential issue** on the project:
-https://github.com/USERNAME/hadid/issues (mark it confidential).
+Please report vulnerabilities through GitHub Security Advisories:
+https://github.com/hasanalaaa/hadid/security/advisories/new
+
 Include reproduction steps and impact. You will get a response as soon as
 possible, and a fix will be prioritized over all other work.

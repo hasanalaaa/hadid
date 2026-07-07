@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.0.0 - 2026-07-07
+
+### Changed
+- Migrated the project from GitLab to GitHub, including repository links,
+  documentation links, and GitHub Actions CI.
+- Promoted package metadata from Beta to Production/Stable.
+- Updated installation and development instructions for the GitHub repository.
+
+### Fixed
+- Fixed ruff line-length failures in the realistic CLI export tests.
+- Removed stale GitLab-specific reporting guidance from security docs.
+
+### Verified
+- Confirmed GitHub Actions CI passes on the pushed workflow.
+- Ran a realistic end-to-end smoke test across ChatGPT, Claude, and Gemini
+  ZIP exports, auto-detection, incremental re-import, search, Markdown export,
+  and direct SQLite count checks.
+
 ## 0.4.0 - 2026-07-06
 
 ### Added
