@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0 - 2026-07-07
+
+### Added
+- **Web UI Enhancements:** Added responsive design for mobile screens (<768px), keyboard accessibility (tabindex, ARIA roles, enter/space support), improved dark mode contrast, and better empty states.
+- **Robust Imports:** Implemented content hashing to support truly incremental append-only imports without duplicating messages.
+- **CLI Polish:** Added graceful error handling for `FileNotFoundError`, `BadZipFile`, and `JSONDecodeError`. Added progress indicators during large imports.
+- **Pagination:** `list_conversations` now supports `limit` and `offset` for better scalability.
+
+### Changed
+- **Database Schema:** `message_count` is now denormalized and maintained by SQLite triggers for instant O(1) reads instead of expensive joins. Fully backward compatible via automatic schema migrations.
+- **Security:** Added strict `Content-Security-Policy` explicitly blocking `unsafe-inline` scripts.
+
 ## 1.0.0 - 2026-07-07
 
 ### Changed

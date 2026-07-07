@@ -12,7 +12,9 @@ Thanks for your interest! The most valuable contributions right now:
 git clone https://github.com/hasanalaaa/hadid.git
 cd hadid
 pip install -e .[dev]
-pytest
+python3 -m pytest -v
+python3 -m mypy hadid/
+python3 -m coverage run -m pytest -v && python3 -m coverage report --fail-under=80
 ```
 
 ## Guidelines

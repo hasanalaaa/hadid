@@ -102,7 +102,7 @@ hadid/
 ├─ importers/     # chatgpt.py, claude.py, gemini.py — add yours here
 ├─ db.py          # SQLite + FTS5 archive with schema migrations
 ├─ export.py      # Markdown export
-├─ web/           # self-contained local web app (stdlib http.server + bundled assets)
+├─ web/           # local web app package (server.py + templates.py + static/)
 └─ cli.py         # argparse CLI
 ```
 
@@ -126,7 +126,7 @@ change on the default branch and merge requests.
 - [x] Incremental re-import — only new messages are merged
 - [x] Auto-detect platform + import straight from the export ZIP
 - [x] Dashboard, activity chart, and light/dark themes
-- [ ] Publish on PyPI (`pip install hadid`)
+- [x] Publish on PyPI (`pip install hadid`)
 - [ ] Tags and date-range filters
 - [ ] Optional semantic search (fully local)
 
