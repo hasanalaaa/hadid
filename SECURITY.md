@@ -10,7 +10,7 @@ The built-in web app (`hadid serve`) is designed for loopback use only:
 - Binds to `127.0.0.1` by default and warns when bound elsewhere.
 - Validates the `Host` header on every request, which blocks
   **DNS-rebinding** attacks against local servers.
-- Sends a strict `Content-Security-Policy`, `X-Content-Type-Options:
+- Sends a strict `Content-Security-Policy` (with no `unsafe-inline`), `X-Content-Type-Options:
   nosniff`, and `Referrer-Policy: no-referrer` on every response; API
   responses are marked `Cache-Control: no-store`.
 - Renders all conversation content via `textContent` (never `innerHTML`),
