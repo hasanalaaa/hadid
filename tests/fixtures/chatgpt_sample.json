@@ -1,0 +1,21 @@
+[
+  {
+    "id": "test-conv-001",
+    "title": "Test ChatGPT Import",
+    "create_time": 1750000000,
+    "mapping": {
+      "n1": {"message": {"author": {"role": "user"}, "content": {"parts": ["Hello, can you explain what unit testing means in software development?"]}, "create_time": 1750000000}},
+      "n2": {"message": {"author": {"role": "assistant"}, "content": {"parts": ["Unit testing is the practice of testing individual components of code in isolation to verify each part works correctly."]}, "create_time": 1750000060}},
+      "n3": {"message": {"author": {"role": "system"}, "content": {"parts": ["system message should be skipped"]}, "create_time": 1750000001}}
+    }
+  },
+  {
+    "id": "test-conv-002",
+    "title": "محادثة عربية للاختبار",
+    "create_time": 1750100000,
+    "mapping": {
+      "m1": {"message": {"author": {"role": "user"}, "content": {"parts": ["ما هي عاصمة العراق؟"]}, "create_time": 1750100000}},
+      "m2": {"message": {"author": {"role": "assistant"}, "content": {"parts": ["عاصمة العراق هي بغداد، وهي من أقدم مدن العالم وأكبر مدينة في البلاد."]}, "create_time": 1750100030}}
+    }
+  }
+]
