@@ -91,7 +91,16 @@ export default function ConversationDetail() {
   };
 
   const copyMessage = async (content, i) => {
-    await navigator.clipboard.writeText(content);
+    try {
+      await navigator.clipboard.writeText(content);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = content;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch { /* ignore */ }
+      document.body.removeChild(ta);
+    }
     setCopied(i);
     setTimeout(() => setCopied(null), 1500);
   };
