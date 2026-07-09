@@ -1,0 +1,81 @@
+{
+  "project_name": "Hadid (حديد) - Local AI Archive",
+  "app_type": "dashboard",
+  "theme": "dark_light_glassmorphism",
+  "rtl_support": true,
+  "typography": {
+    "headings": "Cairo",
+    "body": "Tajawal",
+    "monospace": "JetBrains Mono",
+    "guidelines": "Use 'Cairo' for elegant, modern Arabic/English headings. Use 'Tajawal' for clean and legible body text. Headings > 32px must use tracking-tight. Ensure fonts are imported via Google Fonts. For English, these fonts provide a clean sans-serif look. Avoid generic fonts like Inter for headings."
+  },
+  "colors": {
+    "dark": {
+      "background": "#050505",
+      "surface": "rgba(255, 255, 255, 0.03)",
+      "surface_hover": "rgba(255, 255, 255, 0.05)",
+      "border": "rgba(255, 255, 255, 0.08)",
+      "text_primary": "#FFFFFF",
+      "text_secondary": "#A1A1AA"
+    },
+    "light": {
+      "background": "#F8F9FA",
+      "surface": "rgba(0, 0, 0, 0.02)",
+      "surface_hover": "rgba(0, 0, 0, 0.04)",
+      "border": "rgba(0, 0, 0, 0.06)",
+      "text_primary": "#09090B",
+      "text_secondary": "#71717A"
+    },
+    "ai_platforms": {
+      "chatgpt": "#10A37F",
+      "claude": "#D97757",
+      "gemini": "#1A73E8",
+      "deepseek": "#0050FF",
+      "grok": "#E11D48",
+      "perplexity": "#22B8CD"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "The Crystal Variant. High blur (backdrop-blur-xl or 2xl). Solid 1px inner border to separate glass from background (border-white/10 in dark mode). Never use pure transparent backgrounds.",
+    "shadows": "Diffuse ambient shadows. Dark mode: shadow-[0_8px_32px_rgba(0,0,0,0.4)]. Light mode: shadow-[0_8px_32px_rgba(0,0,0,0.08)].",
+    "textures": "Use a very subtle noise/grain overlay fixed over the background to prevent color banding and add a premium feel."
+  },
+  "grids": {
+    "dashboard_bento": "High density bento grid (grid-cols-1 md:grid-cols-3 lg:grid-cols-4). gap-4 or gap-6. Primary stat cards take col-span-1. Main activity chart takes col-span-2 row-span-2. Recent conversations list takes col-span-1 row-span-2. Use h-full on children.",
+    "conversations_list": "List-based grid with wide gaps. Filter chips span full width."
+  },
+  "layouts": {
+    "overall": "Sidebar navigation (RTL-aware: Right side in Arabic, Left side in English). Main content area with ample padding (p-6 to p-12).",
+    "import_page": "Massive drag-and-drop zone centered. Dash-border (border-dashed border-2 border-border/40) with subtle glass fill.",
+    "conversation_detail": "Chat-bubble layout. Assistant messages stretch slightly wider, user messages are compact. Highlight matching search terms."
+  },
+  "motion": {
+    "micro_interactions": "Hover states must lift elements (-translate-y-1) and slightly brighten background. Use framer-motion for staggering list items.",
+    "modals": "Cmd+K search modal should animate scale and opacity from center.",
+    "transitions": "Specify transitions (transition-transform, transition-colors duration-200) instead of transition-all."
+  },
+  "accessibility": {
+    "contrast": "Maintain 4.5:1 ratio. Glass panels must have adequate opacity behind text.",
+    "testing": "All interactive elements (buttons, inputs, filters, list items) MUST include data-testid attribute in kebab-case."
+  },
+  "component_strategy": {
+    "cards": "Avoid standard white/black Shadcn cards. Override to use the custom glassmorphism surface variables. Add optical clarity via borders.",
+    "buttons": "Pill-shaped or rounded-md. Primary action buttons should use a metallic/accent hue, not default blue.",
+    "forms": "Inputs must have a subtle background and clear borders. Focus rings must be high contrast.",
+    "search": "Cmd+K (or Ctrl+K) triggers a full glassmorphic spotlight search overlay.",
+    "toasts": "Use Sonner. Ensure RTL positioning support (bottom-left for LTR, bottom-right for RTL)."
+  },
+  "media": {
+    "icons": "Use 'lucide-react' for UI. Use 'react-icons/si' for AI platforms (SiOpenai, SiAnthropic, SiGoogle, SiDependabot/custom for DeepSeek). Install via: yarn add react-icons lucide-react"
+  },
+  "instructions_to_main_agent": [
+    "CRITICAL: Build with RTL layout support natively. Use Tailwind logical properties (e.g., ms-, me-, ps-, pe-, border-s) instead of explicit left/right properties to support English and Arabic seamlessly.",
+    "Implement a language toggle that changes the dir='rtl' attribute on the document body/html.",
+    "Ensure 'Cairo' is applied to headings and 'Tajawal' to body text. Load via Google Fonts in index.css.",
+    "The Cmd+K live full-text search is critical. Implement an elegant glassmorphic command palette with highlighted text match snippets.",
+    "Build a robust Dashboard mimicking a high-end SaaS data tool. Use recharts with custom glassmorphism tooltips.",
+    "Implement conversation detail view with Markdown export capabilities and Role avatars.",
+    "DO NOT use generic Shadcn configurations without applying the Glassmorphic customizations."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": "Avoid generic outputs, 'AI slop' aesthetics. Create depth through layered design elements with z-index hierarchy. DO NOT apply universal transition (transition: all). Use modern button styles. DO NOT center align the app container text-align. Add data-testid to all actionable items. DO NOT use complete transparent backgrounds in headers or overlays."
+}
